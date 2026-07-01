@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getDomain } from '@/lib/domains';
+import { buildSystemPrompt, buildUserPrompt } from '@/lib/scoring-prompt';
 import { EvaluationResult } from '@/lib/types';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -29,12 +30,13 @@ export async function POST(req: NextRequest) {
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: domain.systemPrompt,
+      max_tokens: 1200,
+      system: buildSystemPrompt(domain),
       messages: [
         {
           role: 'user',
-          content: domain.userPromptBuilder(
+          content: buildUserPrompt(
+            domain,
             question,
             answer.trim(),
             clarificationResponse?.trim()

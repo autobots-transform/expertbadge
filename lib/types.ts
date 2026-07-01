@@ -3,17 +3,33 @@ export type BadgeTier = 'expert' | 'proficient' | 'practicing' | 'aspiring';
 
 export interface Question {
   id: number;
-  domain: string;        // sub-domain label e.g. "Discovery"
+  domain: string;
   text: string;
-  context?: string;      // optional situational context shown below the question
+  context?: string;
 }
 
 export interface Expert {
-  key: string;           // e.g. "MC"
+  key: string;
   name: string;
   description: string;
-  avatarColor: string;   // tailwind bg class
+  avatarColor: string;
   textColor: string;
+}
+
+export interface CoreBehaviour {
+  id: string;
+  label: string;
+  description: string;
+  signals: string[];
+  antiSignals: string[];
+}
+
+export interface ExpertLens {
+  key: string;
+  name: string;
+  source: string;
+  behaviourIds: string[];
+  principle: string;
 }
 
 export interface DomainConfig {
@@ -22,16 +38,13 @@ export interface DomainConfig {
   description: string;
   experts: Expert[];
   questions: Question[];
-  systemPrompt: string;
-  userPromptBuilder: (
-    question: Question,
-    answer: string,
-    clarificationResponse?: string
-  ) => string;
+  coreBehaviours: CoreBehaviour[];
+  expertLenses: ExpertLens[];
+  promptAddendum?: string;
 }
 
 export interface QuestionScores {
-  accuracy: number;   // 0-100
+  accuracy: number;
   nuance: number;
   vocab: number;
 }
@@ -39,8 +52,11 @@ export interface QuestionScores {
 export interface ExpertView {
   expert: string;
   key: string;
-  position: string;   // paraphrase of documented expert stance
-  gap: string;        // what user missed or nailed
+  principle: string;
+  source: string;
+  demonstrated: 'yes' | 'partial' | 'no';
+  what_you_showed: string;
+  what_to_deepen: string | null;
 }
 
 export interface EvaluationResult {
@@ -51,24 +67,22 @@ export interface EvaluationResult {
   answer_flagged: boolean;
 }
 
-// NEW — returned by /api/clarify
 export interface ClarifyResult {
   needs_clarification: boolean;
-  clarifying_question: string | null;  // null when needs_clarification is false
+  clarifying_question: string | null;
 }
 
-// NEW — tracks per-question turn state
 export interface QuestionTurn {
   questionId: number;
   answer: string;
-  clarifyingQuestion?: string;         // the question Claude asked
-  clarificationResponse?: string;      // user's response to it
-  skippedClarification?: boolean;      // user chose "Skip, score as-is"
+  clarifyingQuestion?: string;
+  clarificationResponse?: string;
+  skippedClarification?: boolean;
 }
 
 export interface AssessmentState {
   currentQ: number;
-  turns: QuestionTurn[];               // replaces raw answers[] — full turn record
+  turns: QuestionTurn[];
   scores: QuestionScores[];
   domainRatings: { domain: string; rating: DomainRating }[];
   totals: { accuracy: number; nuance: number; vocab: number };

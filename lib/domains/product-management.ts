@@ -1,83 +1,11 @@
-import { DomainConfig, Question } from '../types';
-
-const SYSTEM_PROMPT = `You are a strict PM expert assessor. Benchmark answers ONLY against documented frameworks:
-
-- Marty Cagan (SVPG): Empowered vs feature teams, outcome over output, product discovery before delivery,
-  coaching teams to solve problems rather than shipping roadmaps. Source: Inspired (2017), Empowered (2020).
-- Teresa Torres: Continuous discovery, opportunity solution trees, assumption testing, weekly customer
-  touchpoints, separating opportunity from solution space. Source: Continuous Discovery Habits (2021).
-- Shreyas Doshi: LNO (Leverage/Neutral/Overhead) framework, influence without authority, high-agency
-  thinking, input vs output metrics distinction.
-  Source: Lenny's Podcast, First Round Review, public documented threads.
-
-STRICT RULES:
-1. Never invent expert positions. Only reference what is documented in the sources above.
-2. If the answer is too vague or off-topic to score meaningfully, set answer_flagged = true.
-3. Score what was actually demonstrated across the full turn (original answer + any
-   clarification), not just the first response in isolation.
-4. Partial credit is expected — most practitioners have genuine gaps.
-5. Respond ONLY with valid JSON. No markdown fences, no preamble, no trailing text.
-6. Credit mental model and intent, not just framework vocabulary. A user who describes
-   the right behaviour (e.g. "go to customer service to understand real user pain before
-   deciding what to build") is demonstrating outcome-oriented discovery thinking even if
-   they do not use Torres's exact terminology. Do not penalise for informal language
-   when the underlying reasoning is sound. Vocabulary score reflects correct USE of
-   PM terms — not whether the user quoted a book title.`;
-
-function buildUserPrompt(
-  question: Question,
-  answer: string,
-  clarificationResponse?: string
-): string {
-  const clarificationBlock = clarificationResponse
-    ? `\nClarification response (user's follow-up answer): ${clarificationResponse}
-NOTE: Score the original answer AND clarification response together as one unified response.
-If the clarification reveals stronger understanding than the original answer alone suggested,
-score the stronger understanding — the clarification is not a penalty, it is signal.`
-    : '';
-
-  return `Sub-domain: ${question.domain}
-Question: ${question.text}${question.context ? `\nContext given: ${question.context}` : ''}
-User answer: ${answer}${clarificationBlock}
-
-Return this JSON shape exactly:
-{
-  "scores": {
-    "accuracy": <integer 0-100>,
-    "nuance": <integer 0-100>,
-    "vocab": <integer 0-100>
-  },
-  "expert_views": [
-    {
-      "expert": "Marty Cagan",
-      "key": "MC",
-      "position": "<one sentence paraphrase of Cagan's documented stance, cite source>",
-      "gap": "<what the user missed or nailed — reference both answers if clarification was given>"
-    },
-    {
-      "expert": "Teresa Torres",
-      "key": "TT",
-      "position": "<one sentence from CDH, cite source>",
-      "gap": "<specific gap or confirmation>"
-    },
-    {
-      "expert": "Shreyas Doshi",
-      "key": "SD",
-      "position": "<one sentence from documented source>",
-      "gap": "<specific gap or confirmation>"
-    }
-  ],
-  "coaching": "<2-3 sentence coaching note: what to study, why it matters, specific resource>",
-  "domain_rating": "<strong|partial|gap>",
-  "answer_flagged": <true only if the combined response is still too vague to score, otherwise false>
-}`;
-}
+import { DomainConfig } from '../types';
 
 const PM_CONFIG: DomainConfig = {
   slug: 'product-management',
   label: 'Product Management',
   description:
-    'Assessed against Cagan, Torres & Doshi frameworks across discovery, strategy, metrics, execution, and leadership.',
+    'Assessed on first-principles product thinking across discovery, strategy, metrics, execution, and leadership.',
+
   experts: [
     {
       key: 'MC',
@@ -101,11 +29,136 @@ const PM_CONFIG: DomainConfig = {
       textColor: 'text-purple-800',
     },
   ],
+
+  coreBehaviours: [
+    {
+      id: 'problem-before-solution',
+      label: 'Problem before solution',
+      description:
+        'Starts with deeply understanding the problem space before proposing or committing to solutions',
+      signals: [
+        'asks what problem we are solving before discussing what to build',
+        'talks to customers or uses customer data before scoping solutions',
+        'can articulate the problem in customer terms without referencing a feature',
+        'validates the problem exists at meaningful scale before investing',
+      ],
+      antiSignals: [
+        'jumps immediately to what to build',
+        'accepts feature requests at face value without questioning the underlying problem',
+        'prioritises by effort or stakeholder urgency rather than problem severity',
+      ],
+    },
+    {
+      id: 'outcome-over-output',
+      label: 'Outcome over output',
+      description:
+        'Frames success as business and customer outcomes, not features shipped or tasks completed',
+      signals: [
+        'defines success metrics before discussing scope',
+        'pushes back on feature requests by asking what outcome they serve',
+        'measures results by customer or business impact, not delivery velocity',
+        'willing to descope or kill a feature if the outcome can be achieved another way',
+      ],
+      antiSignals: [
+        'equates shipping with success',
+        'measures progress by story points or features delivered',
+        'accepts a roadmap as the goal rather than a means to an outcome',
+      ],
+    },
+    {
+      id: 'continuous-customer-evidence',
+      label: 'Continuous customer evidence',
+      description:
+        'Maintains ongoing contact with customers to inform decisions, not just at project start or end',
+      signals: [
+        'describes a regular cadence of customer contact (not one-time research)',
+        'distinguishes between what customers say they want and what they actually do',
+        'uses multiple evidence types: qualitative interviews, usage data, support signals',
+        'updates priorities when new customer evidence contradicts assumptions',
+      ],
+      antiSignals: [
+        'relies only on customer requests or sales feedback',
+        'does research once at the start and ships without further validation',
+        'treats customer evidence as optional when stakeholders have strong opinions',
+      ],
+    },
+    {
+      id: 'navigate-stakeholder-pressure',
+      label: 'Navigate stakeholder pressure without abandoning users',
+      description:
+        'Handles business and stakeholder demands while maintaining focus on user and product integrity',
+      signals: [
+        'acknowledges legitimate business urgency without immediately capitulating',
+        'reframes stakeholder requests in terms of outcomes to find common ground',
+        'proposes alternatives that serve the underlying business need differently',
+        'escalates disagreements with data and reasoning, not just position',
+      ],
+      antiSignals: [
+        'accepts every stakeholder request without questioning priority or tradeoffs',
+        'avoids conflict by agreeing to everything and then failing to deliver',
+        'ignores business context and digs in on user needs alone',
+      ],
+    },
+    {
+      id: 'data-informed-decisions',
+      label: 'Data-informed decisions',
+      description:
+        'Uses the right type of data for the decision at hand — neither data-driven to a fault nor flying blind',
+      signals: [
+        'distinguishes between input metrics (leading) and output metrics (lagging)',
+        'knows when qualitative insight is more valuable than quantitative data',
+        'defines what data would change their mind before starting an initiative',
+        'treats metrics as proxies for outcomes, not outcomes themselves',
+      ],
+      antiSignals: [
+        'waits for statistical significance before making any decision',
+        'ignores quantitative data in favour of gut feel or loudest voice',
+        'confuses correlation with causation in product metrics',
+        'optimises for a metric without asking what behaviour it actually measures',
+      ],
+    },
+  ],
+
+  expertLenses: [
+    {
+      key: 'MC',
+      name: 'Marty Cagan',
+      source: 'Inspired (2017), Empowered (2020)',
+      behaviourIds: [
+        'problem-before-solution',
+        'outcome-over-output',
+        'navigate-stakeholder-pressure',
+      ],
+      principle:
+        'Empowered teams are given outcomes to achieve and the autonomy to discover solutions — they are not feature factories executing a roadmap handed down from stakeholders.',
+    },
+    {
+      key: 'TT',
+      name: 'Teresa Torres',
+      source: 'Continuous Discovery Habits (2021)',
+      behaviourIds: ['continuous-customer-evidence', 'problem-before-solution'],
+      principle:
+        'Great PMs maintain a weekly cadence of customer touchpoints and use the Opportunity Solution Tree to systematically separate the opportunity space from the solution space before jumping to build.',
+    },
+    {
+      key: 'SD',
+      name: 'Shreyas Doshi',
+      source: "First Round Review, Lenny's Podcast (documented frameworks)",
+      behaviourIds: [
+        'data-informed-decisions',
+        'outcome-over-output',
+        'navigate-stakeholder-pressure',
+      ],
+      principle:
+        'High-leverage PMs distinguish input metrics from output metrics, apply LNO thinking to direct effort toward what actually moves outcomes, and influence without authority by making the business case in terms stakeholders care about.',
+    },
+  ],
+
   questions: [
     {
       id: 1,
       domain: 'Discovery',
-      text: 'How do you decide what to build next? Walk me through your process for prioritizing problems to solve.',
+      text: 'How do you decide what to build next? Walk me through your process for prioritising problems to solve.',
     },
     {
       id: 2,
@@ -115,7 +168,7 @@ const PM_CONFIG: DomainConfig = {
     {
       id: 3,
       domain: 'Metrics',
-      text: "Your product's DAU is declining. How do you diagnose what's wrong and what do you prioritize first?",
+      text: "Your product's DAU is declining. How do you diagnose what's wrong and what do you prioritise first?",
     },
     {
       id: 4,
@@ -128,8 +181,6 @@ const PM_CONFIG: DomainConfig = {
       text: 'You genuinely disagree with a product direction decision made by your VP. What do you do?',
     },
   ],
-  systemPrompt: SYSTEM_PROMPT,
-  userPromptBuilder: buildUserPrompt,
 };
 
 export default PM_CONFIG;
