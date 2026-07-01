@@ -30,12 +30,11 @@ export default function Home() {
 
       <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-stone-200 bg-white px-5 py-4">
         <p className="text-sm leading-relaxed text-stone-600">
-          <span className="font-semibold text-stone-800">
-            No invented authorities.
-          </span>{' '}
-          Answers are scored only against named, published sources. When an
-          answer is too vague to assess fairly, we ask for more — we never
-          fabricate a score.
+          Scored on what you do, not what you&apos;ve read. Expert frameworks
+          are reference points, not the benchmark — plain language and formal
+          vocabulary score the same when the thinking is sound. When an answer
+          is too brief to assess fairly, we ask for more — we never fabricate a
+          score.
         </p>
       </div>
 
