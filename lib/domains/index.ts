@@ -1,7 +1,9 @@
 import { DomainConfig } from '../types';
+import TPM_CONFIG from './technical-program-management';
 import PM_CONFIG from './product-management';
 
 const DOMAINS: Record<string, DomainConfig> = {
+  'technical-program-management': TPM_CONFIG,
   'product-management': PM_CONFIG,
   // Future: 'engineering-management': EM_CONFIG,
   // Future: 'data-science': DS_CONFIG,

@@ -44,7 +44,7 @@ Return exactly:
 }`;
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-opus-4-8',
       max_tokens: 256,
       system: CLARIFY_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
